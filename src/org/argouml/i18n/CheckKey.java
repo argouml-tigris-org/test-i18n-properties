@@ -21,6 +21,8 @@ import java.util.ResourceBundle;
 import java.util.MissingResourceException;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
+
 import org.junit.Test;
 
 /**
@@ -29,13 +31,6 @@ import org.junit.Test;
  * This is a test case for property files.
  */
 public abstract class CheckKey {
-    public interface IgnoredKey {
-        public abstract boolean ignore(String theKey,
-                Locale theLocale,
-                ResourceBundle theLabels,
-                ResourceBundle theRootLabels);
-    }
-
     /**
      * Create the list of objects to test.
      *
@@ -44,8 +39,7 @@ public abstract class CheckKey {
      * @return a Collection of arrays of Objects.
      */
     public static Collection<Object[]> getKeysFor(
-            Locale currentLocale,
-            IgnoredKey predicate) {
+            Locale currentLocale) {
         Collection<Object[]> retval = new ArrayList<Object[]>();
         for (String bundleName : Arrays.asList(
                 "aboutbox",
@@ -79,13 +73,6 @@ public abstract class CheckKey {
                         "org.argouml.i18n." + bundleName,
                         Locale.ROOT);
                 for (String key : labels.keySet()) {
-                    if (predicate.ignore(key,
-                            currentLocale,
-                            labels,
-                            rootLabels)) {
-                        continue;
-                    }
-
                     retval.add(new Object[] {
                             key,
                             currentLocale,
@@ -99,25 +86,6 @@ public abstract class CheckKey {
         }
 
         return retval;
-    }
-
-    /**
-     * Create the list of objects to test.
-     *
-     * @param currentLocale the Locale to test.
-     * @return a Collection of arrays of Objects.
-     */
-    public static Collection<Object[]> getKeysFor(
-            Locale locale) {
-        return getKeysFor(locale,
-                new IgnoredKey() {
-                    public boolean ignore(String theKey,
-                            Locale theLocale,
-                            ResourceBundle theLabels,
-                            ResourceBundle theRootLabels) {
-                        return false;
-                    };
-                });
     }
 
     private String key;
@@ -139,16 +107,11 @@ public abstract class CheckKey {
      */
     @Test
     public void localizedKeyIsInOrigin() {
-        try {
-            assertTrue("Key " + key
-                    + " should be added for " + currentLocale + ". "
-                    + "It exists in the root bundle.",
-                    rootLabels.getString(key) instanceof String);
-        } catch (MissingResourceException e) {
-            fail("Key " + key
-                    + " shouldn't exist for " + currentLocale + ". "
-                    + "It does not exist in the root bundle.");
-        }
+        assumeTrue(labels != rootLabels);
+        assertTrue("Key " + key
+                + " shouldn't exist for " + currentLocale + ". "
+                + "It does not exist in the root bundle.",
+                rootLabels.containsKey(key));
     }
 
     /**
@@ -156,12 +119,11 @@ public abstract class CheckKey {
      */
     @Test
     public void keyIsLocalized() {
-        try {
-            assertTrue("Key " + key + " should be localized for "
-                    + currentLocale + ".",
-                    labels.getString(key) != rootLabels.getString(key));
-        } catch (MissingResourceException e) {
-        }
+        assumeTrue(labels != rootLabels);
+        assumeTrue(rootLabels.containsKey(key));
+        assertTrue("Key " + key + " should be localized for "
+                + currentLocale + ".",
+                labels.getString(key) != rootLabels.getString(key));
     }
 
     /**
@@ -169,17 +131,13 @@ public abstract class CheckKey {
      */
     @Test
     public void checkMessageFormatValues() {
-        String i18nString = labels.getString(key);
-        String rootString;
-        try {
-            rootString = rootLabels.getString(key);
-        } catch (MissingResourceException e) {
-            return;
-        }
+        assumeTrue(labels != rootLabels);
+        assumeTrue(rootLabels.containsKey(key));
 
-        if (i18nString.equals(rootString)) {
-            return;
-        }
+        String i18nString = labels.getString(key);
+        String rootString = rootLabels.getString(key);
+
+        assumeTrue(!i18nString.equals(rootString));
 
         int last = 0;
         for (int i = 0;; i++) {
@@ -214,17 +172,13 @@ public abstract class CheckKey {
      */
     @Test
     public void checkMessageFormatting() {
-        String i18nString = labels.getString(key);
-        String rootString;
-        try {
-            rootString = rootLabels.getString(key);
-        } catch (MissingResourceException e) {
-            return;
-        }
+        assumeTrue(labels != rootLabels);
+        assumeTrue(rootLabels.containsKey(key));
 
-        if (i18nString.equals(rootString)) {
-            return;
-        }
+        String i18nString = labels.getString(key);
+        String rootString = rootLabels.getString(key);
+
+        assumeTrue(!i18nString.equals(rootString));
 
         // Starting with the same amount of whitespace.
         for (int i = 0;; i++) {
