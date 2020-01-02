@@ -18,10 +18,15 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.concurrent.Callable;
 import java.util.MissingResourceException;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
+
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ErrorCollector;
 
 /**
  * Checks the contents of the internationalization property files.
@@ -29,13 +34,9 @@ import org.junit.Test;
  * This is a test case for property files.
  */
 public abstract class CheckKey {
-    public interface IgnoredKey {
-        public abstract boolean ignore(String theKey,
-                Locale theLocale,
-                ResourceBundle theLabels,
-                ResourceBundle theRootLabels);
-    }
-
+    @Rule
+    public ErrorCollector collector = new ErrorCollector();
+    
     /**
      * Create the list of objects to test.
      *
@@ -44,8 +45,7 @@ public abstract class CheckKey {
      * @return a Collection of arrays of Objects.
      */
     public static Collection<Object[]> getKeysFor(
-            Locale currentLocale,
-            IgnoredKey predicate) {
+            Locale currentLocale) {
         Collection<Object[]> retval = new ArrayList<Object[]>();
         for (String bundleName : Arrays.asList(
                 "aboutbox",
@@ -79,13 +79,6 @@ public abstract class CheckKey {
                         "org.argouml.i18n." + bundleName,
                         Locale.ROOT);
                 for (String key : labels.keySet()) {
-                    if (predicate.ignore(key,
-                            currentLocale,
-                            labels,
-                            rootLabels)) {
-                        continue;
-                    }
-
                     retval.add(new Object[] {
                             key,
                             currentLocale,
@@ -99,25 +92,6 @@ public abstract class CheckKey {
         }
 
         return retval;
-    }
-
-    /**
-     * Create the list of objects to test.
-     *
-     * @param currentLocale the Locale to test.
-     * @return a Collection of arrays of Objects.
-     */
-    public static Collection<Object[]> getKeysFor(
-            Locale locale) {
-        return getKeysFor(locale,
-                new IgnoredKey() {
-                    public boolean ignore(String theKey,
-                            Locale theLocale,
-                            ResourceBundle theLabels,
-                            ResourceBundle theRootLabels) {
-                        return false;
-                    };
-                });
     }
 
     private String key;
@@ -139,16 +113,17 @@ public abstract class CheckKey {
      */
     @Test
     public void localizedKeyIsInOrigin() {
-        try {
-            assertTrue("Key " + key
-                    + " should be added for " + currentLocale + ". "
-                    + "It exists in the root bundle.",
-                    rootLabels.getString(key) instanceof String);
-        } catch (MissingResourceException e) {
-            fail("Key " + key
-                    + " shouldn't exist for " + currentLocale + ". "
-                    + "It does not exist in the root bundle.");
-        }
+        assumeTrue(labels != rootLabels);
+        collector.checkSucceeds(new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+                assertTrue("Key " + key
+                        + " shouldn't exist for " + currentLocale + ". "
+                        + "It does not exist in the root bundle.",
+                        rootLabels.containsKey(key));
+                return null;
+            }
+        });
     }
 
     /**
@@ -156,12 +131,17 @@ public abstract class CheckKey {
      */
     @Test
     public void keyIsLocalized() {
-        try {
-            assertTrue("Key " + key + " should be localized for "
-                    + currentLocale + ".",
-                    labels.getString(key) != rootLabels.getString(key));
-        } catch (MissingResourceException e) {
-        }
+        assumeTrue(labels != rootLabels);
+        assumeTrue(rootLabels.containsKey(key));
+        collector.checkSucceeds(new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+                assertTrue("Key " + key + " should be localized for "
+                        + currentLocale + ".",
+                        labels.getString(key) != rootLabels.getString(key));
+                return null;
+            }
+        });
     }
 
     /**
@@ -169,44 +149,46 @@ public abstract class CheckKey {
      */
     @Test
     public void checkMessageFormatValues() {
-        String i18nString = labels.getString(key);
-        String rootString;
-        try {
-            rootString = rootLabels.getString(key);
-        } catch (MissingResourceException e) {
-            return;
-        }
+        assumeTrue(labels != rootLabels);
+        assumeTrue(rootLabels.containsKey(key));
 
-        if (i18nString.equals(rootString)) {
-            return;
-        }
+        final String i18nString = labels.getString(key);
+        final String rootString = rootLabels.getString(key);
 
-        int last = 0;
-        for (int i = 0;; i++) {
-            String match = ".*[{]" + i + "[},].*";
-            boolean i18nFound = i18nString.matches(match);
-            boolean rootFound = rootString.matches(match);
+        assumeTrue(!i18nString.equals(rootString));
 
-            if (rootFound) {
-                assertTrue("Key " + key
-                        + " for " + currentLocale
-                        + " should use formatted value " + i
-                        + " as the root bundle does.",
-                        i18nFound);
-            } else {
-                assertFalse("Key " + key
-                        + " for " + currentLocale
-                        + " should not use formatted value " + i
-                        + " as the root bundle does not.",
-                        i18nFound);
+        collector.checkSucceeds(new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+                int last = 0;
+                for (int i = 0;; i++) {
+                    String match = ".*[{]" + i + "[},].*";
+                    boolean i18nFound = i18nString.matches(match);
+                    boolean rootFound = rootString.matches(match);
+
+                    if (rootFound) {
+                        assertTrue("Key " + key
+                                + " for " + currentLocale
+                                + " should use formatted value " + i
+                                + " as the root bundle does.",
+                                i18nFound);
+                    } else {
+                        assertFalse("Key " + key
+                                + " for " + currentLocale
+                                + " should not use formatted value " + i
+                                + " as the root bundle does not.",
+                                i18nFound);
+                    }
+
+                    if (i18nFound || rootFound) {
+                        last = i;
+                    } else if (i > 3 + last) {
+                        break;
+                    }
+                }
+                return null;
             }
-
-            if (i18nFound || rootFound) {
-                last = i;
-            } else if (i > 3 + last) {
-                break;
-            }
-        }
+        });
     }
 
     /**
@@ -214,59 +196,67 @@ public abstract class CheckKey {
      */
     @Test
     public void checkMessageFormatting() {
-        String i18nString = labels.getString(key);
-        String rootString;
-        try {
-            rootString = rootLabels.getString(key);
-        } catch (MissingResourceException e) {
-            return;
-        }
+        assumeTrue(labels != rootLabels);
+        assumeTrue(rootLabels.containsKey(key));
 
-        if (i18nString.equals(rootString)) {
-            return;
-        }
+        final String i18nString = labels.getString(key);
+        final String rootString = rootLabels.getString(key);
+
+        assumeTrue(!i18nString.equals(rootString));
 
         // Starting with the same amount of whitespace.
-        for (int i = 0;; i++) {
-            if (i18nString.length() < i) {
-                break;
+        collector.checkSucceeds(new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+                for (int i = 0;; i++) {
+                    if (i18nString.length() < i) {
+                        break;
+                    }
+                    if (rootString.length() < i) {
+                        break;
+                    }
+                    char i18nChar = i18nString.charAt(i);
+                    char rootChar = rootString.charAt(i);
+                    if (Character.isWhitespace(i18nChar)
+                            || Character.isWhitespace(rootChar)) {
+                        assertEquals("Whitespace should match in the beginning for"
+                                + " key " + key
+                                + " for " + currentLocale,
+                                rootChar, i18nChar);
+                    } else {
+                        break;
+                    }
+                }
+                return null;
             }
-            if (rootString.length() < i) {
-                break;
-            }
-            char i18nChar = i18nString.charAt(i);
-            char rootChar = rootString.charAt(i);
-            if (Character.isWhitespace(i18nChar)
-                    || Character.isWhitespace(rootChar)) {
-                assertEquals("Whitespace should match in the beginning for"
-                        + " key " + key
-                        + " for " + currentLocale,
-                        rootChar, i18nChar);
-            } else {
-                break;
-            }
-        }
+        });
 
         // Ending with the same amount of whitespace.
-        for (int i = 1;; i++) {
-            if (i18nString.length() < i) {
-                break;
-            }
-            if (rootString.length() < i) {
-                break;
-            }
+        collector.checkSucceeds(new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+                for (int i = 1;; i++) {
+                    if (i18nString.length() < i) {
+                        break;
+                    }
+                    if (rootString.length() < i) {
+                        break;
+                    }
 
-            char i18nChar = i18nString.charAt(i18nString.length() - i);
-            char rootChar = rootString.charAt(rootString.length() - i);
-            if (Character.isWhitespace(i18nChar)
-                    || Character.isWhitespace(rootChar)) {
-                assertEquals("Whitespace should match at the end for"
-                        + " key " + key
-                        + " for " + currentLocale,
-                        rootChar, i18nChar);
-            } else {
-                break;
+                    char i18nChar = i18nString.charAt(i18nString.length() - i);
+                    char rootChar = rootString.charAt(rootString.length() - i);
+                    if (Character.isWhitespace(i18nChar)
+                            || Character.isWhitespace(rootChar)) {
+                        assertEquals("Whitespace should match at the end for"
+                                + " key " + key
+                                + " for " + currentLocale,
+                                rootChar, i18nChar);
+                    } else {
+                        break;
+                    }
+                }
+                return null;
             }
-        }
+        });
     }
 }
