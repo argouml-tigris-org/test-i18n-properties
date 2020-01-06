@@ -209,10 +209,10 @@ public abstract class CheckKey {
             @Override
             public Object call() throws Exception {
                 for (int i = 0;; i++) {
-                    if (i18nString.length() < i) {
+                    if (i18nString.length() <= i) {
                         break;
                     }
-                    if (rootString.length() < i) {
+                    if (rootString.length() <= i) {
                         break;
                     }
                     char i18nChar = i18nString.charAt(i);
