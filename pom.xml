@@ -16,6 +16,7 @@
 
   <properties>
     <project.build.sourceEncoding>ISO-8859-1</project.build.sourceEncoding>
+    <github.site.repositoryName>${project.artifactId}</github.site.repositoryName>
   </properties>
 
   <dependencies>
@@ -32,4 +33,15 @@
   <description>
 This is a project with test cases for internationalization.
   </description>
+
+  <issueManagement>
+    <system>GitHub Issues</system>
+    <url>https://github.com/argouml-tigris-org/${github.site.repositoryName}/issues</url>
+  </issueManagement>
+
+  <scm>
+    <url>https://github.com/argouml-tigris-org/${github.site.repositoryName}</url>
+    <connection>scm:git:https://github.com/argouml-tigris-org/${github.site.repositoryName}.git</connection>
+    <developerConnection>scm:git:ssh://review.gerrithub.io:29418/argouml-tigris-org/${github.site.repositoryName}.git</developerConnection>
+  </scm>
 </project>
