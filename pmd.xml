@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<pmd version="4.3" timestamp="2020-03-25T00:02:07.680">
+<pmd version="4.3" timestamp="2020-03-29T08:35:38.725">
 <file name="/var/jenkins_home/workspace/tion_test-i18n-properties_master/src/org/argouml/i18n/CheckKey.java">
 <violation beginline="89" endline="91" begincolumn="15" endcolumn="13" rule="EmptyCatchBlock" ruleset="Basic Rules" package="org.argouml.i18n" class="CheckKey" method="getKeysFor" externalInfoUrl="http://pmd.sourceforge.net/rules/basic.html#EmptyCatchBlock" priority="3">
 Avoid empty catch blocks
