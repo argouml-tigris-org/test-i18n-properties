@@ -44,4 +44,19 @@ This is a project with test cases for internationalization.
     <connection>scm:git:https://github.com/argouml-tigris-org/${github.site.repositoryName}.git</connection>
     <developerConnection>scm:git:ssh://review.gerrithub.io:29418/argouml-tigris-org/${github.site.repositoryName}.git</developerConnection>
   </scm>
+
+  <repositories>
+    <!-- Repo specified to find parentpom remotely. -->
+    <repository>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <id>sonatype-nexus-snapshots</id>
+      <name>Sonatype Nexus Snapshots</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </repository>
+  </repositories>
 </project>
