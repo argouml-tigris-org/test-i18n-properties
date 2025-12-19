@@ -3,7 +3,7 @@
 <rss version="0.91">
   <channel>
     <title>test-i18n-properties - Checkstyle report</title>
-    <link>http://nexus.sonatype.org/oss-repository-hosting.html/parentpom/test-i18n-properties</link>
+    <link>${project.url}</link>
     <description>test-i18n-properties - Checkstyle report</description>
     <language>en-us</language>
     <copyright>&#169;2025</copyright>
@@ -13,9 +13,9 @@
              Warnings: 8,
              Infos: 0
       </title>
-            <link>http://nexus.sonatype.org/oss-repository-hosting.html/parentpom/test-i18n-properties/checkstyle.html</link>
+            <link>${project.url}/checkstyle.html</link>
       <description>
-        <p>Click <a href="http://nexus.sonatype.org/oss-repository-hosting.html/parentpom/test-i18n-properties/checkstyle.html">here</a> for the full Checkstyle report.</p>
+        <p>Click <a href="${project.url}/checkstyle.html">here</a> for the full Checkstyle report.</p>
 
         <table summary="Files" boder="1">
           <thead>
@@ -29,7 +29,7 @@
           <tbody>
                           <tr>
                 <td>
-                  <a href="http://nexus.sonatype.org/oss-repository-hosting.html/parentpom/test-i18n-properties/checkstyle.html#org.argouml.i18n.CheckKey.java">org/argouml/i18n/CheckKey.java</a>
+                  <a href="${project.url}/checkstyle.html#org.argouml.i18n.CheckKey.java">org/argouml/i18n/CheckKey.java</a>
                 </td>
                 <td>
                   0
